@@ -1,0 +1,47 @@
+bun.lockb
+bunfig.toml
+.npmrc
+.vars
+.*.vars
+.wrangler
+wrangler.toml
+
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Testing
+coverage
+
+# Turbo
+.turbo
+
+# Vercel
+.vercel
+
+# Build Outputs
+.next/
+out/
+build
+dist
+
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Misc
+.DS_Store
+*.pem
+
+# Keep Ren'py API file
+!apps/web/app/api/renpy/build

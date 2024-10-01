@@ -1,0 +1,13 @@
+{
+	"name": "docs",
+	"version": "1.0.0",
+	"private": true,
+	"scripts": {
+		"dev": "mintlify dev --port 3001"
+	},
+	"dependencies": {
+		"@mintlify/scraping": "^3.0.144",
+		"ajv": "^8.17.1",
+		"mintlify": "^4.0.196"
+	}
+}
