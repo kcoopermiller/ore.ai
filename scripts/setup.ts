@@ -243,35 +243,66 @@ async function promptForAuth0Credentials() {
 	outro(".dev.vars updated with Auth0 Client ID, Client Secret, and Issuer.");
 }
 
-// Function to prompt for Groq credentials
-async function promptForGroqApiKey() {
-	intro("Let's set up your GROQ API Key.");
-
+// Function to prompt for OpenAI API key
+async function promptForOpenAIApiKey() {
+	intro("Let's set up your OpenAI API Key.");
+  
 	const devVarsPath = path.join(__dirname, "..", "apps", "web", ".dev.vars");
-
+  
 	console.log(
-		"\x1b[33mNow, we will set up your GROQ API Key. \nGo to https://console.groq.com/ to create an account and get your API key.\x1b[0m",
+		"\x1b[33mNow, we will set up your OpenAI API Key. \nGo to https://platform.openai.com/api-keys to create an account and get your API key.\x1b[0m"
 	);
-	const groqApiKey = await prompt(
-		"Enter your GROQ API Key (press enter to skip)",
-		"",
+	const openaiApiKey = await prompt(
+		"Enter your OpenAI API Key (press enter to skip)",
+		""
 	);
-
+  
 	try {
 		if (fs.existsSync(devVarsPath)) {
 			// Append to existing file
-			fs.appendFileSync(devVarsPath, `\nGROQ_API_KEY=${groqApiKey}`);
+			fs.appendFileSync(devVarsPath, `\nOPENAI_API_KEY=${openaiApiKey}`);
 		} else {
 			// Create new file
-			fs.writeFileSync(devVarsPath, `GROQ_API_KEY=${groqApiKey}\n`);
+			fs.writeFileSync(devVarsPath, `OPENAI_API_KEY=${openaiApiKey}\n`);
 		}
-		console.log("\x1b[33mGROQ API Key added to .dev.vars file.\x1b[0m");
+	  	console.log("\x1b[33mOpenAI API Key added to .dev.vars file.\x1b[0m");
 	} catch (error) {
-		console.error("\x1b[31mError updating .dev.vars file:", error, "\x1b[0m");
-		cancel("Operation cancelled.");
+	  	console.error("\x1b[31mError updating .dev.vars file:", error, "\x1b[0m");
+	  	cancel("Operation cancelled.");
 	}
+  
+	outro("OpenAI API Key configuration completed.");
+}
 
-	outro("GROQ API Key configuration completed.");
+// Function to prompt for Fal API key
+async function promptForFalApiKey() {
+	intro("Let's set up your Fal API Key.");
+  
+	const devVarsPath = path.join(__dirname, "..", "apps", "web", ".dev.vars");
+  
+	console.log(
+	  	"\x1b[33mNow, we will set up your Fal API Key. \nGo to https://www.fal.ai/ to create an account and get your API key.\x1b[0m"
+	);
+	const falApiKey = await prompt(
+	  	"Enter your Fal API Key (press enter to skip)",
+	  	""
+	);
+  
+	try {
+		if (fs.existsSync(devVarsPath)) {
+			// Append to existing file
+			fs.appendFileSync(devVarsPath, `\nFAL_KEY=${falApiKey}`);
+		} else {
+			// Create new file
+			fs.writeFileSync(devVarsPath, `FAL_KEY=${falApiKey}\n`);
+		}
+		console.log("\x1b[33mFal API Key added to .dev.vars file.\x1b[0m");
+	} catch (error) {
+	  	console.error("\x1b[31mError updating .dev.vars file:", error, "\x1b[0m");
+	  	cancel("Operation cancelled.");
+	}
+  
+	outro("Fal API Key configuration completed.");
 }
 
 // Function to generate secure random 32-character string
@@ -371,7 +402,8 @@ async function main() {
 		}
 
 		await promptForAuth0Credentials();
-		await promptForGroqApiKey();
+		await promptForOpenAIApiKey();
+		await promptForFalApiKey();
 		console.log("\x1b[33mReady... Set... Launch\x1b[0m");
 		await updateDevVarsWithSecret();
 		await runDatabaseMigrations(dbName);
