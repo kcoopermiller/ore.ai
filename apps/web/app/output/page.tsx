@@ -19,7 +19,10 @@ import { useNovelGeneration } from "../lib/generate-novel";
 
 export default function OutputPage() {
 	const [generatedContent, setGeneratedContent] = useState({
-		images: [],
+		images: {
+			backgrounds: [],
+			sprites: [],
+		},
 		title: "",
 		genres: [],
 		description: "",
@@ -156,10 +159,10 @@ export default function OutputPage() {
 					<div className="w-2/3">
 						<Carousel className="w-full">
 							<CarouselContent>
-								{[...Array(generatedContent.images.length)].map((_, index) => (
+								{[...Array(generatedContent.images.backgrounds.length)].map((_, index) => (
 									<CarouselItem key={index as number}>
 										<Image
-											src={generatedContent.images[index]}
+											src={generatedContent.images.backgrounds[index]}
 											alt={`Image ${index + 1}`}
 											width={1280}
 											height={720}
@@ -177,7 +180,7 @@ export default function OutputPage() {
 					<div className="w-1/3 flex flex-col space-y-4">
 						<div className="flex space-x-4 items-end">
 							<Image
-								src={generatedContent.images[0]}
+								src='/web-presplash.jpg'
 								alt="Thumbnail"
 								width={320}
 								height={180}

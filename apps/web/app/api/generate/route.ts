@@ -1,7 +1,7 @@
 import * as fal from "@fal-ai/serverless-client";
 import type { NextRequest } from "next/server";
 import OpenAI from "openai";
-import { danbooruPrompt, infoPrompt } from "../../lib/prompts";
+import { spritePrompt, backgroundPrompt, infoPrompt } from "../../lib/prompts";
 import { ensureAuth } from "../ensureAuth";
 
 export const runtime = "edge";
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
 		return new Response("Please provide a prompt", { status: 400 });
 	}
 
-	if (!process.env.AI || !process.env.FAL_KEY || !process.env.OPENAI_API_KEY) {
+	if (!process.env.AI || !process.env.FAL_KEY || !process.env.OPENAI_API_KEY || !process.env.GLIF_API_KEY || !process.env.GLIF_URL) {
 		return new Response("Service is not available at the moment", {
 			status: 500,
 		});
@@ -30,13 +30,21 @@ export async function POST(req: NextRequest) {
 				"https://gateway.ai.cloudflare.com/v1/8309637d56917aeed4c48245a14a7692/orevn/openai",
 		});
 
-		const danbooruCompletion = await openai.chat.completions.create({
+		const spriteCompletion = await openai.chat.completions.create({
 			model: "gpt-4o-mini",
 			messages: [
 				// { role: "system", content: "You are a helpful assistant." },
-				{ role: "user", content: danbooruPrompt(prompt) },
+				{ role: "user", content: spritePrompt(prompt) },
 			],
-			max_tokens: 100,
+			max_tokens: 750,
+		});
+
+		const backgroundCompletion = await openai.chat.completions.create({
+			model: "gpt-4o-mini",
+			messages: [
+				{ role: "user", content: backgroundPrompt(prompt) },
+			],
+			max_tokens: 250,
 		});
 
 		const infoPromptCompletion = infoPrompt(prompt, "no script available");
@@ -50,7 +58,11 @@ export async function POST(req: NextRequest) {
 			max_tokens: 225,
 		});
 
-		const danbooru = danbooruCompletion.choices[0]?.message.content.replace(
+		const sprite = spriteCompletion.choices[0]?.message.content.replace(
+			/<\/?answer>/g,
+			"",
+		);
+		const background = backgroundCompletion.choices[0]?.message.content.replace(
 			/<\/?answer>/g,
 			"",
 		);
@@ -61,37 +73,54 @@ export async function POST(req: NextRequest) {
 			credentials: process.env.FAL_KEY,
 		});
 
-		const imageResult = await fal.subscribe("comfy/kcoopermiller/orevn", {
+		const backgroundResult = await fal.subscribe("fal-ai/flux-pro/v1.1", {
 			input: {
-				prompt: danbooru,
-				negative_prompt:
-					"nsfw, lowres, (bad), text, dialogue, error, fewer, extra, missing, worst quality, jpeg artifacts, low quality, watermark, unfinished, displeasing, oldest, early, chromatic aberration, signature, extra digits, artistic error, username, scan, [abstract]",
-				seed: Math.random() * (2147483647 - 1) + 1,
+			  prompt: background,
+			  image_size: "landscape_16_9",
 			},
 			logs: true,
 			onQueueUpdate: (update) => {
-				if (update.status === "IN_PROGRESS") {
-					update.logs.map((log) => log.message).forEach(console.log);
-				}
+			  if (update.status === "IN_PROGRESS") {
+				update.logs.map((log) => log.message).forEach(console.log);
+			  }
 			},
 		});
 
-		const imageUrls = imageResult.outputs[9].images.map((image) => image.url);
-
-		const saveResponse = await fetch("http://localhost:3000/api/images/write", {
-			method: "POST",
+		const glifData = {
+			id: process.env.GLIF_URL,
+			inputs: [ sprite ],
+		};
+		const spriteResponse = await fetch('https://simple-api.glif.app',
+		{
+			method: 'POST',
 			headers: {
-				"Content-Type": "application/json",
+				'Authorization': `Bearer ${process.env.GLIF_API_KEY}`,
+				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify({ imageUrls }),
+			body: JSON.stringify(glifData)
 		});
+		const spriteResult = await spriteResponse.json();
+		const spriteUrl = spriteResult.output;
 
-		if (!saveResponse.ok) {
-			throw new Error("Failed to save images");
-		}
+		const backgroundUrls = backgroundResult.images.map((image) => image.url);
+
+		// const saveResponse = await fetch("http://localhost:3000/api/images/write", {
+		// 	method: "POST",
+		// 	headers: {
+		// 		"Content-Type": "application/json",
+		// 	},
+		// 	body: JSON.stringify({ backgroundUrls }),
+		// });
+
+		// if (!saveResponse.ok) {
+		// 	throw new Error("Failed to save images");
+		// }
 
 		return Response.json({
-			images: imageUrls,
+			images: {
+				backgrounds: backgroundUrls,
+				sprites: [spriteUrl],
+			},
 			title: info.title,
 			genres: info.genres,
 			description: info.description,

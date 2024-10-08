@@ -21,6 +21,7 @@ import {
 import { Skeleton } from "@repo/ui/src/skeleton";
 import { Toaster } from "@repo/ui/src/toaster";
 import { useToast } from "@repo/ui/src/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@repo/ui/src/tabs";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import Document from "@tiptap/extension-document";
 import Paragraph from "@tiptap/extension-paragraph";
@@ -36,14 +37,14 @@ import { useNovelGeneration } from "../lib/generate-novel";
 
 export default function EditPage() {
 	// Ref to store the saved content that is synced with local storage
-	const savedContent = useRef({ code: "", imageUrls: [] });
+	const savedContent = useRef({ code: "", images: { backgrounds: [], sprites: [] } });
 	// State to store the current content that is being edited
 	const [currentContent, setCurrentContent] = useState({
 		code: "",
-		imageUrls: [],
+		images: { backgrounds: [], sprites: [] },
 	});
 	const [hasChanges, setHasChanges] = useState(false);
-	const [editIndex, setEditIndex] = useState<number | null>(null);
+	const [editIndex, setEditIndex] = useState<{ type: 'backgrounds' | 'sprites', index: number } | null>(null);
 	const [isCanvasOpen, setIsCanvasOpen] = useState(false);
 	const [isLoading, setIsLoading] = useState(true);
 	const { toast } = useToast();
@@ -64,14 +65,14 @@ export default function EditPage() {
 
 				// Get image URLs from localStorage
 				const storedData = localStorage.getItem("generatedNovel");
-				let imageUrls = [];
+				let images = { backgrounds: [], sprites: [] };
 				if (storedData) {
 					const { response } = JSON.parse(storedData);
-					imageUrls = response.images;
+					images = response.images;
 				}
 
-				savedContent.current = { code: code.content, imageUrls };
-				setCurrentContent({ code: code.content, imageUrls });
+				savedContent.current = { code: code.content, images };
+				setCurrentContent({ code: code.content, images });
 			} catch (error) {
 				console.error("Error fetching script content:", error);
 				toast({
@@ -92,8 +93,7 @@ export default function EditPage() {
 	const updateHasChanges = useCallback((newContent) => {
 		setHasChanges(
 			savedContent.current.code !== newContent.code ||
-				JSON.stringify(savedContent.current.imageUrls) !==
-					JSON.stringify(newContent.imageUrls),
+			JSON.stringify(savedContent.current.images) !== JSON.stringify(newContent.images)
 		);
 	}, []);
 
@@ -150,7 +150,7 @@ export default function EditPage() {
 				...storedData,
 				response: {
 					...storedData.response,
-					images: currentContent.imageUrls,
+					images: currentContent.images,
 				},
 			}),
 		);
@@ -181,11 +181,11 @@ export default function EditPage() {
 	}, [hasChanges, currentContent]);
 
 	// Regenerate image for a specific index
-	const handleRegenerateImage = async (index: number) => {
-		setEditIndex(index);
+  	const handleRegenerateImage = async (type: 'backgrounds' | 'sprites', index: number) => {
+		setEditIndex({ type, index });
 		try {
 			const storedData = JSON.parse(
-				localStorage.getItem("generatedNovel") || "{}",
+				localStorage.getItem("generatedNovel") || "{}"
 			);
 			const { prompt } = storedData;
 			const newData = await generateNovel({
@@ -195,9 +195,9 @@ export default function EditPage() {
 			});
 
 			setCurrentContent((prev) => {
-				const newImageUrls = [...prev.imageUrls];
-				newImageUrls[index] = newData.images[0];
-				const newContent = { ...prev, imageUrls: newImageUrls };
+				const newImages = { ...prev.images };
+				newImages[type][index] = newData.images[type][index];
+				const newContent = { ...prev, images: newImages };
 				updateHasChanges(newContent);
 				return newContent;
 			});
@@ -214,8 +214,8 @@ export default function EditPage() {
 	};
 
 	// Open tldraw canvas to edit image
-	const handleEditImage = async (index: number) => {
-		setEditIndex(index);
+	const handleEditImage = async (type: 'backgrounds' | 'sprites', index: number) => {
+		setEditIndex({ type, index });
 		try {
 			setIsCanvasOpen(true);
 		} catch (error) {
@@ -257,39 +257,38 @@ export default function EditPage() {
 			<div className="flex-grow p-4 overflow-hidden">
 				<ResizablePanelGroup direction="horizontal" className="h-full">
 					<ResizablePanel defaultSize={33} minSize={20}>
-						<div className="h-full bg-white/10 rounded-lg border border-white/20 overflow-hidden">
-							{currentContent.imageUrls.map((url, index) => (
-								<ContextMenu key={index}>
-									<ContextMenuTrigger>
-										<div className="p-2">
-											{editIndex === index ? (
-												<Skeleton className="w-full h-80 rounded-lg" />
-											) : (
-												<img
-													src={url}
-													alt={`Scene ${index + 1}`}
-													className="rounded-lg w-full"
-												/>
-											)}
-										</div>
-									</ContextMenuTrigger>
-									<ContextMenuContent>
-										<ContextMenuItem
-											onClick={() => handleRegenerateImage(index)}
-											disabled={editIndex !== null}
-										>
-											Regenerate Image
-										</ContextMenuItem>
-										<ContextMenuItem
-											onClick={() => handleEditImage(index)}
-											disabled={editIndex !== null}
-										>
-											Inpaint
-										</ContextMenuItem>
-									</ContextMenuContent>
-								</ContextMenu>
-							))}
-						</div>
+						<Tabs defaultValue="backgrounds" className="w-full">
+							<TabsList className="grid w-full grid-cols-2">
+								<TabsTrigger value="backgrounds">Backgrounds</TabsTrigger>
+								<TabsTrigger value="sprites">Sprites</TabsTrigger>
+							</TabsList>
+							<TabsContent value="backgrounds" className="h-full bg-white/10 rounded-lg border border-white/20 overflow-hidden">
+								{currentContent.images.backgrounds.map((url, index) => (
+									<ImageItem
+										key={index}
+										url={url}
+										index={index}
+										type="background"
+										editIndex={editIndex}
+										handleRegenerateImage={handleRegenerateImage}
+										handleEditImage={handleEditImage}
+									/>
+								))}
+							</TabsContent>
+							<TabsContent value="sprites" className="h-full bg-white/10 rounded-lg border border-white/20 overflow-hidden">
+								{currentContent.images.sprites.map((url, index) => (
+									<ImageItem
+										key={index}
+										url={url}
+										index={index}
+										type="sprite"
+										editIndex={editIndex}
+										handleRegenerateImage={handleRegenerateImage}
+										handleEditImage={handleEditImage}
+									/>
+								))}
+							</TabsContent>
+						</Tabs>
 					</ResizablePanel>
 					<ResizableHandle withHandle/>
 					<ResizablePanel defaultSize={67} minSize={30}>
@@ -315,7 +314,7 @@ export default function EditPage() {
 						</DialogDescription>
 					</DialogHeader>
 					{editIndex !== null && (
-						<Canvas imageUrl={currentContent.imageUrls[editIndex]} />
+						<Canvas imageUrl={currentContent.images[editIndex.type][editIndex.index]} />
 					)}
 				</DialogContent>
 			</Dialog>
@@ -356,5 +355,39 @@ export default function EditPage() {
         .hljs-keyword, .hljs-selector-tag { color: #569cd6; }
       `}</style>
 		</div>
+	);
+}
+
+function ImageItem({ url, index, type, editIndex, handleRegenerateImage, handleEditImage }) {
+	return (
+		<ContextMenu>
+			<ContextMenuTrigger>
+				<div className="p-2">
+					{editIndex?.type === type && editIndex?.index === index ? (
+						<Skeleton className="w-full h-80 rounded-lg" />
+					) : (
+						<img
+							src={url}
+							alt={`${type} ${index + 1}`}
+							className="rounded-lg w-full"
+						/>
+					)}
+				</div>
+			</ContextMenuTrigger>
+			<ContextMenuContent>
+				<ContextMenuItem
+					onClick={() => handleRegenerateImage(type, index)}
+					disabled={editIndex !== null}
+				>
+					Regenerate Image
+		  	</ContextMenuItem>
+		 		<ContextMenuItem
+					onClick={() => handleEditImage(type, index)}
+					disabled={editIndex !== null}
+		  		>
+					Inpaint
+		  		</ContextMenuItem>
+			</ContextMenuContent>
+	  	</ContextMenu>
 	);
 }
