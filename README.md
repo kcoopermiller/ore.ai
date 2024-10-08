@@ -25,8 +25,8 @@ Note: This app uses the [Nix](https://nixos.org/) package manager
 Run the following commands:
 
 ```
-git clone https://github.com/kcoopermiller/orevn
-cd orevn
+git clone https://github.com/kcoopermiller/ore.ai
+cd ore.ai
 bun install
 npx wrangler login
 bun run setup
