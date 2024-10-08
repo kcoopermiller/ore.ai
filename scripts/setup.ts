@@ -305,6 +305,37 @@ async function promptForFalApiKey() {
 	outro("Fal API Key configuration completed.");
 }
 
+// Function to prompt for GLIF API key
+async function promptForGlifApiKey() {
+	intro("Let's set up your GLIF API Key.");
+  
+	const devVarsPath = path.join(__dirname, "..", "apps", "web", ".dev.vars");
+  
+	console.log(
+		"\x1b[33mNow, we will set up your GLIF API Key. \nGo to https://glif.app/ to create an account and get your API key.\x1b[0m"
+	);
+	const glifApiKey = await prompt(
+		"Enter your GLIF API Key (press enter to skip)",
+		""
+	);
+  
+	try {
+		if (fs.existsSync(devVarsPath)) {
+			// Append to existing file
+			fs.appendFileSync(devVarsPath, `\nGLIF_API_KEY=${glifApiKey}`);
+	  	} else {
+			// Create new file
+			fs.writeFileSync(devVarsPath, `GLIF_API_KEY=${glifApiKey}\n`);
+	  	}
+	  	console.log("\x1b[33mGLIF API Key added to .dev.vars file.\x1b[0m");
+	} catch (error) {
+	  	console.error("\x1b[31mError updating .dev.vars file:", error, "\x1b[0m");
+	  	cancel("Operation cancelled.");
+	}
+  
+	outro("GLIF API Key configuration completed.");
+}
+
 // Function to generate secure random 32-character string
 function generateSecureRandomString(length: number): string {
 	return crypto
@@ -404,6 +435,7 @@ async function main() {
 		await promptForAuth0Credentials();
 		await promptForOpenAIApiKey();
 		await promptForFalApiKey();
+		await promptForGlifApiKey();
 		console.log("\x1b[33mReady... Set... Launch\x1b[0m");
 		await updateDevVarsWithSecret();
 		await runDatabaseMigrations(dbName);

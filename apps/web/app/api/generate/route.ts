@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
 		});
 
 		const glifData = {
-			id: process.env.GLIF_URL,
+			id: "cm1to0ub0000laem4ysnzhsl6",
 			inputs: [ sprite ],
 		};
 		const spriteResponse = await fetch('https://simple-api.glif.app',
