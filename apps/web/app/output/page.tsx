@@ -180,7 +180,7 @@ export default function OutputPage() {
 					<div className="w-1/3 flex flex-col space-y-4">
 						<div className="flex space-x-4 items-end">
 							<Image
-								src='/web-presplash.jpg'
+								src='/main_menu.png'
 								alt="Thumbnail"
 								width={320}
 								height={180}
