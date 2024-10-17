@@ -5,6 +5,14 @@ import { NextResponse } from "next/server";
 
 export async function POST() {
 	return new Promise((resolve) => {
+		// Override the main_menu.jpg file
+		const mainMenuSourcePath = path.resolve("../../apps/web/public/main_menu.jpg");
+		const mainMenuDestinationPath = path.resolve("../../apps/web/public/test/game/gui/main_menu.jpg");
+
+		fs.copyFile(mainMenuSourcePath, mainMenuDestinationPath).catch((error) => {
+			console.error(`Error overriding main_menu.jpg: ${error}`);
+		});
+
 		exec(
 			"./renpy.sh launcher web_build ../../apps/web/public/test/ --destination ../../apps/web/public/game/",
 			{ cwd: "../../packages/renpy-8.3.2-sdk/" },
@@ -27,12 +35,10 @@ export async function POST() {
 					// Override the web-presplash.jpg file
 					const sourcePath = path.resolve("../../apps/web/public/web-presplash.jpg");
 					const destinationPath = path.resolve("../../apps/web/public/game/web-presplash.jpg");
-										
-					try {
-						await fs.copyFile(sourcePath, destinationPath);
-					} catch (copyError) {
-						console.error(`Error overriding web-presplash.jpg: ${copyError}`);
-					}
+
+					fs.copyFile(sourcePath, destinationPath).catch((error) => {
+						console.error(`Error overriding web-presplash.jpg: ${error}`);
+					});
 					
 					// If we can access the file, it exists
 					const gameUrl = "/game/index.html"; // URL path to the game
