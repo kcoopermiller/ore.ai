@@ -136,6 +136,7 @@ export default function EditPage() {
 			});
 			codeEditor.commands.setCodeBlock();
 		}
+		window.scrollTo(0, 0); // Scrolls to the top of the page on load
 	}, [currentContent.code, codeEditor]);
 
 	// Save the current content to local storage
@@ -359,17 +360,21 @@ export default function EditPage() {
 }
 
 function ImageItem({ url, index, type, editIndex, handleRegenerateImage, handleEditImage }) {
+	const imageClass = type === 'sprite' 
+		? "rounded-lg w-1/4 mx-auto" // Smaller size for sprites
+		: "rounded-lg w-full"; // Full width for backgrounds
+	
 	return (
 		<ContextMenu>
 			<ContextMenuTrigger>
 				<div className="p-2">
 					{editIndex?.type === type && editIndex?.index === index ? (
-						<Skeleton className="w-full h-80 rounded-lg" />
+						<Skeleton className={`${imageClass} h-80`} />
 					) : (
 						<img
 							src={url}
 							alt={`${type} ${index + 1}`}
-							className="rounded-lg w-full"
+							className={imageClass}
 						/>
 					)}
 				</div>
