@@ -1,6 +1,6 @@
 # Ore AI
 
-https://github.com/user-attachments/assets/d43b2ecb-4154-4a08-996d-95a4d524d634
+https://github.com/user-attachments/assets/5a48b530-ac02-4e70-b8a7-717b1f010693
 
 ### Stack
 
@@ -41,7 +41,7 @@ When you're ready to deploy, run `bun run deploy` to deploy to Cloudflare.
 An automatic setup script is provided, but you can also manually set up the following:
 
 1. Create a Cloudflare account and install the [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/#installupdate-wrangler).
-2. Create a D1 database under "Workers and Pages" in the Cloudflare dashboard, or run ``bunx wrangler d1 create ${dbName}`
+2. Create a D1 database under "Workers and Pages" in the Cloudflare dashboard, or run `bunx wrangler d1 create ${dbName}`
 3. Create a `.dev.vars` file in `apps/web` with the following content:
 
 ```
