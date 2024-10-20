@@ -1,5 +1,7 @@
 # Ore AI
 
+[![HuggingFace Model](https://img.shields.io/badge/%F0%9F%A4%97-Sprite%20Model-yellow)](https://huggingface.co/kcoopermiller/sprit3-sh33t)
+
 https://github.com/user-attachments/assets/5a48b530-ac02-4e70-b8a7-717b1f010693
 
 ### Stack
